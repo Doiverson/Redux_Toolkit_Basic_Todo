@@ -1,46 +1,54 @@
 import React, { useState } from 'react';
-import { useDispatch } from "react-redux";
-import { addTodo } from "./redux/todosSlice";
 
-const AddTodo = () => {
-    const [value, setValue] = useState('');
+import { useSelector, useDispatch } from "react-redux";
+import {deleteTodo, editTodo} from "../redux/todosSlice";
 
+import EditForm from "./EditForm";
+import Modal from "./Modal"
+
+
+const TodoList = () => {
+
+    const [ modalOpen, setModalOpen ] = useState(false);
+    const [ modalDefaultValue, setModalDefaultValue ] = useState("");
+    const [ editIndex, setEditIndex ] = useState(null);
+
+    const todos = useSelector((state) => state.todos);
     const dispatch = useDispatch();
 
-    const onSubmit = (event) => {
-        event.preventDefault();
+    const onHandleDelete = (index) => {
+        dispatch(deleteTodo({ index }))
+    }
 
-        if(value.trim().length === 0)
-        {
-            alert("Enter a task before adding !!");
-            setValue("");
-            return;
-        }
+    const onHandleEdit = (value) => {
+        dispatch(editTodo({
+            index: editIndex,
+            todo: value
+        }))
+    }
 
-        dispatch(
-            addTask({
-                task: value
-            })
-        );
-
-        setValue("");
-    };
+    const onClickEdit = (defaultValue, index) => {
+        setEditIndex(index);
+        setModalDefaultValue(defaultValue)
+        setModalOpen(true);
+    }
 
     return (
-        <div className="add-todo">
-            <input
-                type="text"
-                className="task-input"
-                placeholder="Add task"
-                value={value}
-                onChange={(event) => setValue(event.target.value)}
-            ></input>
-
-            <button className="task-button" onClick={onSubmit}>
-                Save
-            </button>
-        </div>
+        <>
+            <ul className="tasks-list">
+                {todos.map((todo, index) => (
+                    <div>
+                        <h1>{todo}</h1>
+                        <button onClick={() => onHandleDelete(index)}>Delete</button>
+                        <button onClick={() => onClickEdit(todo, index)}>Edit</button>
+                    </div>
+                ))}
+            </ul>
+            <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
+                <EditForm value={modalDefaultValue} onClick={onHandleEdit} onClose={() => setModalOpen(false)}/>
+            </Modal>
+        </>
     );
 };
 
-export default AddTodo;
+export default TodoList;
